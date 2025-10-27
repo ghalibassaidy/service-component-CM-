@@ -185,16 +185,6 @@ All responses follow these standards:
 
 ---
 
-## 💼 For Recruiters/Reviewers
-
-- All endpoints are documented in Swagger.
-- Project structure follows backend best practices.
-- Filtering, search, tagging, approval, and error handling are optimized.
-- Ready for integration with any modern frontend (React/Next.js/Vue/etc).
-- Easy to extend with new features (bulk actions, JWT, etc).
-
----
-
 ## 📩 Contact & Contribution
 
 - **Author:** [Ghalib Assaidy](https://github.com/ghalibassaidy)

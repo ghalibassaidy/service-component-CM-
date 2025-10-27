@@ -15,6 +15,15 @@ import (
 	"gorm.io/gorm"
 )
 
+type UpdateComponentStatusRequest struct {
+	Status string `json:"status"`
+}
+
+type UpdateComponentApprovalRequest struct {
+	ApprovalStatus string    `json:"approval_status"`
+	ReviewerID     uuid.UUID `json:"reviewer_id"`
+}
+
 type AddComponentTagRequest struct {
 	TagID uuid.UUID `json:"tag_id" binding:"required"`
 }
@@ -33,16 +42,17 @@ type CreateComponentRequest struct {
 	PropsDefinition interface{} `json:"props_definition"`
 }
 
-// CreateCategory godoc
-// @Summary Membuat kategori baru
-// @Description Endpoint untuk menambah kategori baru
-// @Tags Category
+// CreateComponent godoc
+// @Summary Membuat komponen baru
+// @Description Endpoint untuk menambah komponen UI baru
+// @Tags Component
 // @Accept json
 // @Produce json
-// @Param data body CreateCategoryRequest true "Data kategori"
-// @Success 201 {object} model.Category
+// @Param data body CreateComponentRequest true "Data komponen"
+// @Success 201 {object} model.Component
 // @Failure 400 {object} utils.ErrorResponse
-// @Router /categories [post]
+// @Failure 500 {object} utils.ErrorResponse
+// @Router /components [post]
 
 func CreateComponent(c *gin.Context) {
 	var input CreateComponentRequest
@@ -87,6 +97,23 @@ func CreateComponent(c *gin.Context) {
 
 	utils.Created(c, createdComponent)
 }
+
+// GetAllComponents godoc
+// @Summary Get filtered list of components
+// @Description Get components with advanced filtering, search, and pagination
+// @Tags Component
+// @Accept json
+// @Produce json
+// @Param tag query string false "Tag filter (comma separated)"
+// @Param category query string false "Category slug"
+// @Param status query string false "Component status"
+// @Param approval query string false "Approval status"
+// @Param q query string false "Search keyword (name/description)"
+// @Param page query int false "Page number"
+// @Param limit query int false "Items per page"
+// @Success 200 {object} []model.Component
+// @Failure 500 {object} utils.ErrorResponse
+// @Router /components [get]
 
 func GetAllComponents(c *gin.Context) {
 	var components []model.Component
@@ -137,6 +164,17 @@ func GetAllComponents(c *gin.Context) {
 	utils.Success(c, components)
 }
 
+// GetComponentBySlug godoc
+// @Summary Get component by slug
+// @Description Get detail komponen berdasarkan slug
+// @Tags Component
+// @Accept json
+// @Produce json
+// @Param slug path string true "Slug komponen"
+// @Success 200 {object} model.Component
+// @Failure 404 {object} utils.ErrorResponse
+// @Failure 500 {object} utils.ErrorResponse
+// @Router /components/{slug} [get]
 func GetComponentBySlug(c *gin.Context) {
 	slug := c.Param("slug")
 	var component model.Component
@@ -155,6 +193,19 @@ func GetComponentBySlug(c *gin.Context) {
 	utils.Success(c, component)
 }
 
+// UpdateComponentBySlug godoc
+// @Summary Update komponen by slug
+// @Description Update name/description komponen berdasarkan slug
+// @Tags Component
+// @Accept json
+// @Produce json
+// @Param slug path string true "Slug komponen"
+// @Param data body UpdateComponentRequest true "Data update komponen"
+// @Success 200 {object} model.Component
+// @Failure 400 {object} utils.ErrorResponse
+// @Failure 404 {object} utils.ErrorResponse
+// @Failure 500 {object} utils.ErrorResponse
+// @Router /components/{slug} [patch]
 func UpdateComponentBySlug(c *gin.Context) {
 	slug := c.Param("slug")
 	var component model.Component
@@ -191,6 +242,17 @@ func UpdateComponentBySlug(c *gin.Context) {
 	utils.Success(c, component)
 }
 
+// DeleteComponentBySlug godoc
+// @Summary Delete komponen by slug
+// @Description Hapus komponen berdasarkan slug
+// @Tags Component
+// @Accept json
+// @Produce json
+// @Param slug path string true "Slug komponen"
+// @Success 204 {string} string "No Content"
+// @Failure 404 {object} utils.ErrorResponse
+// @Failure 500 {object} utils.ErrorResponse
+// @Router /components/{slug} [delete]
 func DeleteComponentBySlug(c *gin.Context) {
 	slug := c.Param("slug")
 
@@ -209,6 +271,19 @@ func DeleteComponentBySlug(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
+// AddComponentTag godoc
+// @Summary Tambahkan tag ke komponen
+// @Description Endpoint untuk menambah tag pada komponen
+// @Tags Component
+// @Accept json
+// @Produce json
+// @Param slug path string true "Slug komponen"
+// @Param data body AddComponentTagRequest true "Data tag"
+// @Success 200 {object} model.Component
+// @Failure 400 {object} utils.ErrorResponse
+// @Failure 404 {object} utils.ErrorResponse
+// @Failure 500 {object} utils.ErrorResponse
+// @Router /components/{slug}/tags [post]
 func AddComponentTag(c *gin.Context) {
 	componentSlug := c.Param("slug")
 
@@ -250,6 +325,19 @@ func AddComponentTag(c *gin.Context) {
 	utils.Success(c, component)
 }
 
+// UpdateComponentStatus godoc
+// @Summary Update status komponen
+// @Description Update status komponen (draft/published)
+// @Tags Component
+// @Accept json
+// @Produce json
+// @Param slug path string true "Slug komponen"
+// @Param data body handler.UpdateComponentStatusRequest true "Data status"
+// @Success 200 {object} model.Component
+// @Failure 400 {object} utils.ErrorResponse
+// @Failure 404 {object} utils.ErrorResponse
+// @Failure 500 {object} utils.ErrorResponse
+// @Router /components/{slug}/status [patch]
 func UpdateComponentStatus(c *gin.Context) {
 	slug := c.Param("slug")
 	var req struct {
@@ -269,6 +357,19 @@ func UpdateComponentStatus(c *gin.Context) {
 	utils.Success(c, component)
 }
 
+// UpdateComponentApproval godoc
+// @Summary Update approval komponen
+// @Description Update approval status komponen
+// @Tags Component
+// @Accept json
+// @Produce json
+// @Param slug path string true "Slug komponen"
+// @Param data body handler.UpdateComponentApprovalRequest true "Data approval"
+// @Success 200 {object} model.Component
+// @Failure 400 {object} utils.ErrorResponse
+// @Failure 404 {object} utils.ErrorResponse
+// @Failure 500 {object} utils.ErrorResponse
+// @Router /components/{slug}/approval [patch]
 func UpdateComponentApproval(c *gin.Context) {
 	slug := c.Param("slug")
 	var req struct {

@@ -1,9 +1,316 @@
 basePath: /api/v1
+definitions:
+  handler.AddComponentTagRequest:
+    properties:
+      tag_id:
+        type: string
+    required:
+    - tag_id
+    type: object
+  handler.UpdateComponentApprovalRequest:
+    properties:
+      approval_status:
+        type: string
+      reviewer_id:
+        type: string
+    type: object
+  handler.UpdateComponentRequest:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+    type: object
+  handler.UpdateComponentStatusRequest:
+    properties:
+      status:
+        type: string
+    type: object
+  model.Category:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      slug:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  model.Component:
+    properties:
+      approval_status:
+        type: string
+      category:
+        $ref: '#/definitions/model.Category'
+      code_css:
+        type: string
+      code_jsx:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      reviewer_id:
+        type: string
+      slug:
+        type: string
+      status:
+        type: string
+      tags:
+        items:
+          $ref: '#/definitions/model.Tag'
+        type: array
+      updated_at:
+        type: string
+      user_id:
+        type: string
+    type: object
+  model.Tag:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      slug:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  utils.ErrorResponse:
+    properties:
+      message:
+        example: Component not found
+        type: string
+      status:
+        example: error
+        type: string
+    type: object
 host: localhost:8080
 info:
   contact: {}
   description: This is the API for the ComponentHub marketplace.
   title: ComponentHub API
   version: "1.0"
-paths: {}
+paths:
+  /components/{slug}:
+    delete:
+      consumes:
+      - application/json
+      description: Hapus komponen berdasarkan slug
+      parameters:
+      - description: Slug komponen
+        in: path
+        name: slug
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Delete komponen by slug
+      tags:
+      - Component
+    get:
+      consumes:
+      - application/json
+      description: Get detail komponen berdasarkan slug
+      parameters:
+      - description: Slug komponen
+        in: path
+        name: slug
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Component'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Get component by slug
+      tags:
+      - Component
+    patch:
+      consumes:
+      - application/json
+      description: Update name/description komponen berdasarkan slug
+      parameters:
+      - description: Slug komponen
+        in: path
+        name: slug
+        required: true
+        type: string
+      - description: Data update komponen
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/handler.UpdateComponentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Component'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Update komponen by slug
+      tags:
+      - Component
+  /components/{slug}/approval:
+    patch:
+      consumes:
+      - application/json
+      description: Update approval status komponen
+      parameters:
+      - description: Slug komponen
+        in: path
+        name: slug
+        required: true
+        type: string
+      - description: Data approval
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/handler.UpdateComponentApprovalRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Component'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Update approval komponen
+      tags:
+      - Component
+  /components/{slug}/status:
+    patch:
+      consumes:
+      - application/json
+      description: Update status komponen (draft/published)
+      parameters:
+      - description: Slug komponen
+        in: path
+        name: slug
+        required: true
+        type: string
+      - description: Data status
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/handler.UpdateComponentStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Component'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Update status komponen
+      tags:
+      - Component
+  /components/{slug}/tags:
+    post:
+      consumes:
+      - application/json
+      description: Endpoint untuk menambah tag pada komponen
+      parameters:
+      - description: Slug komponen
+        in: path
+        name: slug
+        required: true
+        type: string
+      - description: Data tag
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/handler.AddComponentTagRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Component'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: Tambahkan tag ke komponen
+      tags:
+      - Component
 swagger: "2.0"

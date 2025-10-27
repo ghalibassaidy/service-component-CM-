@@ -94,15 +94,46 @@ func GetAllComponents(c *gin.Context) {
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
 	offset := (page - 1) * limit
 
-	err := database.DB.Preload("Category").Preload("Tags").
-		Offset(offset).Limit(limit).Order("created_at desc").
-		Find(&components).Error
+	tag := c.Query("tag")
+	category := c.Query("category")
+	status := c.Query("status")
+	approval := c.Query("approval")
+	q := c.Query("q")
 
+	query := database.DB.Preload("Category").Preload("Tags")
+
+	if category != "" {
+		var cat model.Category
+		if err := database.DB.Where("slug = ?", category).First(&cat).Error; err == nil {
+			query = query.Where("category_id = ?", cat.ID)
+		}
+	}
+
+	if tag != "" {
+		tagNames := strings.Split(tag, ",")
+		query = query.Joins("JOIN component_tags ON component_tags.component_id = components.id").
+			Joins("JOIN tags ON tags.id = component_tags.tag_id").
+			Where("tags.name IN ?", tagNames)
+	}
+
+	if status != "" {
+		query = query.Where("status = ?", status)
+	}
+
+	if approval != "" {
+		query = query.Where("approval_status = ?", approval)
+	}
+
+	if q != "" {
+		kw := "%" + q + "%"
+		query = query.Where("name ILIKE ? OR description ILIKE ?", kw, kw)
+	}
+
+	err := query.Offset(offset).Limit(limit).Order("created_at desc").Find(&components).Error
 	if err != nil {
 		utils.Error(c, http.StatusInternalServerError, "Failed to fetch components")
 		return
 	}
-
 	utils.Success(c, components)
 }
 
@@ -216,5 +247,45 @@ func AddComponentTag(c *gin.Context) {
 
 	database.DB.Preload("Category").Preload("Tags").First(&component)
 
+	utils.Success(c, component)
+}
+
+func UpdateComponentStatus(c *gin.Context) {
+	slug := c.Param("slug")
+	var req struct {
+		Status string `json:"status"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.Error(c, http.StatusBadRequest, err.Error())
+		return
+	}
+	var component model.Component
+	if err := database.DB.Where("slug = ?", slug).First(&component).Error; err != nil {
+		utils.Error(c, http.StatusNotFound, "Komponen tidak ditemukan")
+		return
+	}
+	component.Status = req.Status
+	database.DB.Save(&component)
+	utils.Success(c, component)
+}
+
+func UpdateComponentApproval(c *gin.Context) {
+	slug := c.Param("slug")
+	var req struct {
+		ApprovalStatus string    `json:"approval_status"`
+		ReviewerID     uuid.UUID `json:"reviewer_id"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.Error(c, http.StatusBadRequest, err.Error())
+		return
+	}
+	var component model.Component
+	if err := database.DB.Where("slug = ?", slug).First(&component).Error; err != nil {
+		utils.Error(c, http.StatusNotFound, "Komponen tidak ditemukan")
+		return
+	}
+	component.ApprovalStatus = req.ApprovalStatus
+	component.ReviewerID = req.ReviewerID
+	database.DB.Save(&component)
 	utils.Success(c, component)
 }

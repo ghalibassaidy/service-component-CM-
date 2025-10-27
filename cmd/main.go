@@ -30,11 +30,12 @@ func main() {
 	if err != nil {
 		log.Fatalf("FATAL: Failed to migrate database: %v", err)
 	}
-
+	
 	router := gin.Default()
 	router.Use(cors.Default())
 	api := router.Group("/api/v1")
 	{
+		api.GET("/health", handler.HealthCheck)
 		api.POST("/components", handler.CreateComponent)
 		api.GET("/components", handler.GetAllComponents)
 		api.GET("/components/:slug", handler.GetComponentBySlug)
@@ -45,6 +46,9 @@ func main() {
 		api.POST("/categories", handler.CreateCategory)
 		api.GET("/categories", handler.GetAllCategories)
 
+		api.PATCH("/components/:slug/status", handler.UpdateComponentStatus)
+		api.PATCH("/components/:slug/approval", handler.UpdateComponentApproval)
+
 		api.POST("/tags", handler.CreateTag)
 		api.GET("/tags", handler.GetAllTags)
 	}
@@ -52,6 +56,5 @@ func main() {
 	// Swagger documentation endpoint
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	log.Println("Server is running on :8080")
 	router.Run(":8080")
 }
